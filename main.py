@@ -1,7 +1,6 @@
 # all number theoretic functions, breadth, sigma, etc
 # power generator
 # error: `n` + ' is not a valid input for ' + `f.__name__`
-# use super() for Decomposition()
 # decorate Decomposition __add__, __mul__
 # imp. Decomposition.__div__, __sub__
 
