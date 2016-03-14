@@ -1,10 +1,9 @@
 # all number theoretic functions, breadth, sigma, etc
 # power generator
-# decomp class
-# @assert_natural(withzero=True)
 # error: `n` + ' is not a valid input for ' + `f.__name__`
 # use super() for Decomposition()
-# number of decomposition decorator (sigh)
+# decorate Decomposition __add__, __mul__
+# imp. Decomposition.__div__, __sub__
 
 import math
 import operator
@@ -145,7 +144,11 @@ def mu(n):
     return 0 if any([p >= 2 for _, p in decomp]) else -1 ** (len(decomp) % 2)
     
 def decompose(n):
-    # decompose(12) = {2: 2, 3: 1}
+    """
+    Return a memoized Decomposition of n.
+    
+    e.g. decompose(12) = {2: 2, 3: 1}
+    """
     return Decomposition(n)
 
 @memoize_with_log
@@ -160,6 +163,9 @@ def decompose(n):
     return Decomposition(n)
 
 def assert_natural(n, m = 1):
+    """
+    Asserts that n is of type int and is greater than m.
+    """
     message = str(n) + ' is not a natural number (of type int).'
     assert (type(n) is int) and (n >= m), message
 
@@ -168,6 +174,11 @@ def assert_prime(n):
     assert is_prime(n), message
 
 def needs_decomp(f):
+    """
+    Decorator for typing arguments as Decomposition.
+    
+    If the argument not already a Decomposition, this makes one out of it.
+    """
     @functools.wraps(f)
     def wrapper(arg):
         if type(arg) is Decomposition:
@@ -178,10 +189,20 @@ def needs_decomp(f):
 
 @needs_decomp
 def support(decomp):
+    """
+    Return the number of distinct prime factors of the argument (int or Decomposition).
+    
+    Called lowercase-omega in number theory.
+    """
     return len(decomp)
 
 @needs_decomp
 def breadth(decomp):
+    """
+    Return the sum of the exponents in the decomposition of the argument.
+    
+    Called uppercase-Omega in number theory.
+    """
     return sum([decomp[d] for d in decomp])
 
 def main():
@@ -190,10 +211,6 @@ def main():
     z1 = x + y
     #print z1
     z2 = x * y
-    print 's d:' + `support(x)` + ' = 2'
-    print 's i:' + `support(2*3*25)` + ' = 3'
-    print 'b d:' + `breadth(z2)` + ' = 6'
-    print 'b i:' + `breadth(2*3*25)` + ' = 4'
 
 if __name__ == '__main__':
     main()
