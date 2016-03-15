@@ -22,31 +22,39 @@ class Decomposition(dict):
     def __init__(self, arg):
         dict.__init__(self)
         if type(arg) is int:
-            self.n = arg
-            candidates = primes(int(math.floor(math.sqrt(self.n))))
-            d = self.n
-            for c in candidates:
-                while d % c == 0:
-                    self[c] += 1
-                    d /= c
+            self.n = 1
+            candidates = primes(int(math.floor(math.sqrt(arg))))
+            r = arg
+            for p in candidates:
+                if r == 1:
+                    return
+                while r % p == 0:
+                    self[p] += 1
+                    r //= p
         elif isinstance(arg, dict):
-            for d in arg:
-                self[d] = arg[d]
-            self.n = product([pow(d, self[d]) for d in self])
-    def __getitem__(self, d):
-        assert_prime(d)
-        return dict.__getitem__(self, d)
-    def __missing__(self, d):
+            for key in arg:
+                self[key] = arg[key]
+            self.n = product([p ** self[p] for p in self])
+    def __getitem__(self, p):
+        assert_prime(p)
+        return dict.__getitem__(self, p)
+    def __missing__(self, p):
         return 0
-    def __setitem__(self, d, e):
-        assert_prime(d)
+    def __setitem__(self, p, e):
+        assert_prime(p)
         assert_natural(e, 0)
         if e == 0:
+            if p in self:
+                dict.__delitem__(self, p)
             return
-        dict.__setitem__(self, d, e)
-    def __delitem__(self, d):
-        self.n /= pow(d, self[d])
-        dict.__delitem__(self, d)
+        if e >= self[p]:
+            self.n *= p ** (e - self[p])
+        else:
+            self.n //= p ** (self[p] - e)
+        dict.__setitem__(self, p, e)
+    def __delitem__(self, p):
+        self.n //= p ** self[p]
+        dict.__delitem__(self, p)
     def __repr__(self):
         return type(self).__name__ + '(' + str(self.n) + ')'
     def __add__(self, rhs):
@@ -58,12 +66,21 @@ class Decomposition(dict):
         return self + rhs
     def __mul__(self, rhs):
         if type(rhs) is int:
+            # should be self * decompose(rhs)?
             return decompose(self.n * rhs)
         if type(rhs) is type(self):
             factors = set(self.keys()) | set(rhs.keys())
-            return Decomposition({d: self[d] + rhs[d] for d in factors})
+            return Decomposition({p: self[p] + rhs[p] for p in factors})
     def __rmul__(self, lhs):
         return self * lhs
+    def _print(self):
+        for p in self:
+            print 'items:'
+            print `p` + ': ' + `self[p]`
+
+def assert_prime(n):
+    message = str(n) + ' is not a prime (of type int).'
+    assert is_prime(n), message
 
 #put somewhere, decorate?
 def product(container):
@@ -83,13 +100,13 @@ def is_prime(n):
     """
     return n in primes(n)
 
-def mt(f):
+def mobius_transform(f):
     """
     Return the mobius transform of the input function f.
     """
     @natural_input
     def mf(n):
-        return sum([mobius(n/d) * f(d) for d in divisors(n)])
+        return sum([mobius(n//d) * f(d) for d in divisors(n)])
     return mf
 
 @needs_decomp
@@ -98,7 +115,7 @@ def divisors(decomp):
     """
     Return a set of all divisors of the argument.
     """
-    combine = lambda acc, p: set(a * pow(p, e) for a in acc for e in xrange(decomp[p] + 1))
+    combine = lambda acc, p: set(a * (p ** e) for a in acc for e in xrange(decomp[p] + 1))
     return reduce(combine, decomp, {1})
 
 @natural_input
@@ -120,17 +137,6 @@ def fib(n):
 @natural_input
 def decompose(n):
     return Decomposition(n)
-
-def assert_natural(n, m = 1):
-    """
-    Asserts that n is of type int and is greater than m.
-    """
-    message = str(n) + ' is not a natural number (of type int).'
-    assert (type(n) is int) and (n >= m), message
-
-def assert_prime(n):
-    message = str(n) + ' is not a prime (of type int).'
-    assert is_prime(n), message
 
 @natural_input
 def constant(n):
@@ -161,7 +167,7 @@ def power_gen(k):
         return identity
     @natural_input
     def power_k(n):
-        return pow(n, k)
+        return n ** k
     return power_k
 
 @natural_input
@@ -182,18 +188,17 @@ def mobius(decomp):
     Called lowercase-mu in number theory.
     mobius(n) = (-1)^support(n) if n is square-free, 0 otherwise.
     """
-    return 0 if any([p >= 2 for _, p in decomp]) else pow(-1, (breadth(decomp) % 2))
+    return 0 if any([p >= 2 for _, p in decomp]) else -1 ** (breadth(decomp) % 2)
 
 @needs_decomp
 def num_divisors(decomp):
-    return product([decomp[d] + 1 for d in decomp])
+    return product([decomp[p] + 1 for p in decomp])
 
 @needs_decomp
 def sum_divisors(decomp):
-    a = [pow(d, decomp[d] + 1) - 1 for d in decomp]
-    b = [d - 1 for d in decomp]
+    a = [(p ** (decomp[p] + 1)) - 1 for p in decomp]
+    b = [p - 1 for p in decomp]
     factors = [fractions.Fraction(x, y) for x, y in zip(a, b)]
-    #factors = [fractions.Fraction(pow(d, decomp[d] + 1), pow(d, decomp[d])) for d in decomp]
     return int(product(factors))
 
 @natural_input(0)
@@ -204,8 +209,8 @@ def sigma_gen(k):
         return sum_divisors
     @needs_decomp
     def sigma_k(decomp):
-        a = [pow(pow(d, decomp[d] + 1), k) - 1 for d in decomp]
-        b = [pow(d, k) - 1 for d in decomp]
+        a = [(p ** ((decomp[p] + 1) * k)) - 1 for p in decomp]
+        b = [p ** k - 1 for p in decomp]
         # rewrite this line, jeez
         factors = [fractions.Fraction(x, y) for x, y in zip(a, b)]
         return int(product(factors))
@@ -220,11 +225,11 @@ def num_abel(decomp):
 
 @natural_input
 def liouville(n):
-    return pow(-1, breadth(n))
+    return -1 ** breadth(n)
 
 @natural_input
 def gamma(n):
-    return pow(-1, breadth(n))
+    return -1 ** breadth(n)
 
 @natural_input
 def ramanujan(n):
