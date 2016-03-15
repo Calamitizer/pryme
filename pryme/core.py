@@ -57,19 +57,20 @@ class Decomposition(dict):
         dict.__delitem__(self, p)
     def __repr__(self):
         return type(self).__name__ + '(' + str(self.n) + ')'
+    def __int__(self):
+        return self.n
     def __add__(self, rhs):
-        if type(rhs) is int:
-            return self + decompose(rhs)
-        if type(rhs) is type(self):
-            return decompose(self.n + rhs.n)
-    def __sub__(self, rhs):
-        if type(rhs) is int:
-            assert_natural(self.n - rhs)
-            return self - decompose(rhs)
-        if type(rhs) is type(self):
-            return decompose(self.n - rhs.n)
+        if type(lhs) in [int, type(self)]:
+            return decompose(int(self) + int(rhs))
     def __radd__(self, lhs):
-        return self + rhs
+        if type(lhs) in [int, type(self)]:
+            return self + rhs
+    def __sub__(self, rhs):
+        if type(lhs) in [int, type(self)]:
+            return decompose(int(self) - int(rhs))
+    def __rsub__(self, lhs):
+        if type(lhs) in [int, type(self)]:
+            return decompose(int(lhs) - int(self))
     def __mul__(self, rhs):
         if type(rhs) is int:
             return self * decompose(rhs)
@@ -80,18 +81,21 @@ class Decomposition(dict):
         return self * lhs
     def __div__(self, rhs):
         if type(rhs) is int:
-            assert_divides(rhs, self.n)
+            assert_divides(rhs, int(self))
             return self / decompose(rhs)
         if type(rhs) is type(self):
             factors = set(self.keys()) | set(rhs.keys())
             quotient = Decomposition(1)
             for p in factors:
                 e = self[p] - rhs[p]
-                assert_natural(e, 0)
                 quotient[p] = e
             return quotient
     def __rdiv__(self, lhs):
-        pass # write this
+        if type(lhs) is int:
+            assert_divides(int(self), lhs)
+            return decompose(lhs) / self
+        if type(lhs) is type(self):
+            return lhs / self
     def _print(self):
         for p in self:
             print 'items:'
@@ -196,7 +200,7 @@ def unit(n):
 @needs_decomp
 def totient(decomp):
     factors = [1 - fractions.Fraction(1, d) for d in decomp]
-    return int(decomp.n * product(factors))
+    return int(int(decomp) * product(factors))
 
 @needs_decomp
 def mobius(decomp):

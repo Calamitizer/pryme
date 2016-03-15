@@ -13,3 +13,4 @@
 * rename product?
 * move wrappers to submodule
 * make mobius map (fixed point?)
+* return sorted list decorator?
