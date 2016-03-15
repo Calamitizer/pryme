@@ -4,8 +4,17 @@ def assert_natural(n, m = 1):
     """
     Assert that n is of type int and is greater than m.
     """
-    message = str(n) + ' is not a natural number (of type int).'
+    message = '{n} is not a natural number (of type int).'.format(n=n)
     assert (type(n) is int) and (n >= m), message
+
+def assert_divides(d, n):
+    """
+    Assert that d divides n, for positive ints.
+    """
+    assert_natural(d)
+    assert_natural(n)
+    message = '{d} does not divide {n}.'.format(d=d, n=n)
+    assert n % d == 0, message
 
 def optional_arguments(d):
     """

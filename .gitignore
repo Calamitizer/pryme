@@ -1,6 +1,10 @@
+# No compiled Python
 *.pyc
 
+# No package shenanigans
 /build/
 /dist/
-
 /*.egg-info
+
+# No .pryme memoizations
+*.pryme

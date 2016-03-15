@@ -60,19 +60,38 @@ class Decomposition(dict):
     def __add__(self, rhs):
         if type(rhs) is int:
             return self + decompose(rhs)
-        if type(rhs) is type(self):                                             
+        if type(rhs) is type(self):
             return decompose(self.n + rhs.n)
+    def __sub__(self, rhs):
+        if type(rhs) is int:
+            assert_natural(self.n - rhs)
+            return self - decompose(rhs)
+        if type(rhs) is type(self):
+            return decompose(self.n - rhs.n)
     def __radd__(self, lhs):
         return self + rhs
     def __mul__(self, rhs):
         if type(rhs) is int:
-            # should be self * decompose(rhs)?
-            return decompose(self.n * rhs)
+            return self * decompose(rhs)
         if type(rhs) is type(self):
             factors = set(self.keys()) | set(rhs.keys())
             return Decomposition({p: self[p] + rhs[p] for p in factors})
     def __rmul__(self, lhs):
         return self * lhs
+    def __div__(self, rhs):
+        if type(rhs) is int:
+            assert_divides(rhs, self.n)
+            return self / decompose(rhs)
+        if type(rhs) is type(self):
+            factors = set(self.keys()) | set(rhs.keys())
+            quotient = Decomposition(1)
+            for p in factors:
+                e = self[p] - rhs[p]
+                assert_natural(e, 0)
+                quotient[p] = e
+            return quotient
+    def __rdiv__(self, lhs):
+        pass # write this
     def _print(self):
         for p in self:
             print 'items:'
