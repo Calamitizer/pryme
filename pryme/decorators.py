@@ -52,20 +52,6 @@ def needs_int(f):
         return f(decompose(arg))
     return wrapper
 
-def needs_decomp(f):
-    """
-    Decorator for typing arguments as Decomposition.
-    
-    If the argument  not already a Decomposition, this makes one out of it.
-    """
-    @functools.wraps(f)
-    def wrapper(arg):
-        if type(arg) is Decomposition:
-            return f(arg)
-        assert_natural(arg)
-        return f(decompose(arg))
-    return wrapper
-
 def memoize(f): # works!
     """
     Memoization decorator for a function taking a single argument

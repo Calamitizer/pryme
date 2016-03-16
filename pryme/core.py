@@ -118,10 +118,7 @@ class Decomposition(dict):
             factors = set(self.keys()) | set(rhs.keys())
             quotient = Decomposition(1)
             # use comprehension
-            for p in factors:
-                e = self[p] - rhs[p]
-                quotient[p] = e
-            return quotient
+            return Decomposition({p: max(self[p] - rhs[p], 0) for p in factors})
         self._raisetypeerror(rhs)
     def __rdiv__(self, lhs):
         if type(lhs) is int:
@@ -171,6 +168,61 @@ class Decomposition(dict):
         expansion = '*'.join(factors) if factors else '1'
         return '{n} = '.format(n=int(self)) + expansion
 
+class MemoFile(dict):
+    def __init__(self, name):
+        dict.__init__(self)
+        self.name = name
+    def __getitem__(self, n):
+        assert_natural(n)
+        with self.open() as datafile:
+            pass # Read
+    def __setitem__(self, n):
+        assert_natural(n)
+        with self.open() as datafile:
+            pass # Write
+
+def needs_decomp(f): #move
+    """
+    Decorator for typing arguments as Decomposition.
+    
+    If the argument is not already a Decomposition, this makes one out of it.
+    """
+    @functools.wraps(f)
+    def wrapper(arg):
+        if type(arg) is Decomposition:
+            return f(arg)
+        assert_natural(arg)
+        return f(decompose(arg))
+    return wrapper
+
+def needs_int(f): #move
+    """
+    Decorator for typing arguments as int from Decomposition.
+    """
+    @functools.wraps(f)
+    def wrapper(arg):
+        if type(arg) is int:
+            assert_natural(arg)
+            return f(arg)
+        return f(decompose(arg))
+    return wrapper
+
+class DecompTable(dict):
+    def __init__(self):
+        dict.__init__(self)
+    def __getitem__(self, n):
+        assert_natural(n)
+        return dict.__getitem(self, n)
+    def __setitem__(self, n, d):
+        assert_natural(n)
+        assert type(d) is Decomposition
+        assert int(d) == n 
+        dict.__setitem__(n, d)
+    def __missing__(self, n):
+        d = decompose(n)
+        self.__setitem__(n, d)
+        return d
+
 def assert_prime(n):
     message = str(n) + ' is not a prime (of type int).'
     assert is_prime(n), message
@@ -192,19 +244,23 @@ def is_prime(n):
     Return whether n is prime.
     """
     return n in primes(n)
+def dirichlet_conv(f, g):
+    """
+    Return the Dirichlet convolution of input functions f and g.
+    """
+    @natural_input
+    def fg(n):
+        return sum([f(d) * g(n//d) for d in divisors(n)])
+    return fg
 
 def mobius_transform(f):
     """
-    Return the mobius transform of the input function f.
+    Return the Mobius transform of the input function f.
     """
-    @natural_input
-    def mf(n):
-        return sum([mobius(n//d) * f(d) for d in divisors(n)])
-    return mf
+    return dirichlet_conv(f, mobius)
 
 @needs_decomp
 def divisors(decomp):
-    print 2
     """
     Return a set of all divisors of the argument.
     """
@@ -218,6 +274,8 @@ def decompose(n):
     
     e.g. decompose(12) = {2: 2, 3: 1}
     """
+    if type(n) is Decomposition:
+        return n
     return Decomposition(n)
 
 @memoize_with_log
@@ -273,7 +331,7 @@ def totient(decomp):
     return int(int(decomp) * product(factors))
 
 @needs_decomp
-def mobius(decomp):
+def mobius(decomp): #fix 1 value
     """
     Return the mobius function evaluated at the argument.
     
@@ -281,7 +339,7 @@ def mobius(decomp):
     Called lowercase-mu in number theory.
     mobius(n) = (-1)^support(n) if n is square-free, 0 otherwise.
     """
-    return 0 if any([p >= 2 for _, p in decomp]) else -1 ** (breadth(decomp) % 2)
+    return 0 if any([decomp[p] >= 2 for p in decomp]) else (-1) ** (breadth(decomp) % 2)
 
 @needs_decomp
 def num_divisors(decomp):
