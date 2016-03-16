@@ -35,6 +35,12 @@ class Decomposition(dict):
             for key in arg:
                 self[key] = arg[key]
             self.n = product([p ** self[p] for p in self])
+        class DecompConstructionError(Exception):
+            def __init__(self, arg):
+                message = 'Invalid Decomposition constructor argument: {c}'
+                message = message.format(c=repr(arg))
+                Exception.__init__(self, message)
+        raise DecompConstructionError(arg)
     def __getitem__(self, p):
         assert_prime(p)
         return dict.__getitem__(self, p)
@@ -55,28 +61,53 @@ class Decomposition(dict):
     def __delitem__(self, p):
         self.n //= p ** self[p]
         dict.__delitem__(self, p)
+    def __str__(self):
+        return str(int(self))
     def __repr__(self):
         return type(self).__name__ + '(' + str(self.n) + ')'
+    def __format__(self, code):
+        if code == 'd':
+            return str(int(self))
+        return dict.__format__(self, code)
     def __int__(self):
         return self.n
+    def __bool__(self):
+        return True
+    def __lt__(self, rhs):
+        return int(self) < int(rhs)
+    def __le__(self, rhs):
+        return int(self) <= int(rhs)
+    def __gt__(self, rhs):
+        return int(self) > int(rhs)
+    def __ge__(self, rhs):
+        return int(self) >= int(rhs)
+    def __eq__(self, rhs):
+        return int(self) == int(rhs)
+    def __ne__(self, rhs):
+        return int(self) != int(rhs)
+    def __hash__(self):
+        return dict.__hash__(self)
     def __add__(self, rhs):
-        if type(lhs) in [int, type(self)]:
+        if type(rhs) in [int, type(self)]:
             return decompose(int(self) + int(rhs))
+        self._raisetypeerror(rhs)
     def __radd__(self, lhs):
-        if type(lhs) in [int, type(self)]:
-            return self + rhs
+        return self + lhs
     def __sub__(self, rhs):
-        if type(lhs) in [int, type(self)]:
+        if type(rhs) in [int, type(self)]:
             return decompose(int(self) - int(rhs))
+        self._raisetypeerror(rhs)
     def __rsub__(self, lhs):
         if type(lhs) in [int, type(self)]:
             return decompose(int(lhs) - int(self))
+        self._raisetypeerror(lhs)
     def __mul__(self, rhs):
         if type(rhs) is int:
             return self * decompose(rhs)
         if type(rhs) is type(self):
             factors = set(self.keys()) | set(rhs.keys())
             return Decomposition({p: self[p] + rhs[p] for p in factors})
+        self._raisetypeerror(rhs)
     def __rmul__(self, lhs):
         return self * lhs
     def __div__(self, rhs):
@@ -86,20 +117,59 @@ class Decomposition(dict):
         if type(rhs) is type(self):
             factors = set(self.keys()) | set(rhs.keys())
             quotient = Decomposition(1)
+            # use comprehension
             for p in factors:
                 e = self[p] - rhs[p]
                 quotient[p] = e
             return quotient
+        self._raisetypeerror(rhs)
     def __rdiv__(self, lhs):
         if type(lhs) is int:
             assert_divides(int(self), lhs)
             return decompose(lhs) / self
         if type(lhs) is type(self):
             return lhs / self
+        self._raisetypeerror(lhs)
+    def __pow__(self, rhs):
+        if type(rhs) in [int, type(self)]:
+            return Decomposition({p: self[p] * int(rhs) for p in self})
+        self._raisetypeerror(rhs)
+    def __rpow__(self, lhs):
+        if type(lhs) in [int, type(self)]:
+            return Decomposition({p: lhs[p] * int(self) for p in decompose(lhs)})
+        self._raisetypeerror(lhs)
+    def __and__(self, rhs):
+        if type(rhs) is int:
+            return rhs & decompose(rhs)
+        if type(rhs) is type(self):
+            factors = set(self.keys()) | set(rhs.keys())
+            return Decomposition({p: min(self[p], rhs[p]) for p in factors})
+        self._raisetypeerror(rhs)
+    def __rand__(self, lhs):
+        return self & lhs
+    def __or__(self, rhs):
+        if type(rhs) is int:
+            return rhs & decompose(rhs)
+        if type(rhs) is type(self):
+            factors = set(self.keys()) | set(rhs.keys())
+            return Decomposition({p: max(self[p], rhs[p]) for p in factors})
+        self._raisetypeerror(lhs)
+    def __ror__(self, lhs):
+        return self | lhs
     def _print(self):
         for p in self:
             print 'items:'
             print `p` + ': ' + `self[p]`
+    def _raisetypeerror(self, arg):
+        message = 'unsupported operand type(s): {0} and {1}'
+        message = message.format(type(self).__name__, type(arg).__name__)
+        raise TypeError(message)
+    def expansion(self):
+        factors = []
+        for p in self:
+            factors.append('({p}^{e})'.format(p=p, e=self[p]))
+        expansion = '*'.join(factors) if factors else '1'
+        return '{n} = '.format(n=int(self)) + expansion
 
 def assert_prime(n):
     message = str(n) + ' is not a prime (of type int).'
