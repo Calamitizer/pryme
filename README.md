@@ -8,7 +8,7 @@
 
 Note: This module is very early in development and not too much super-cool stuff is implemented. Check it out if you're curious, though. The `Decomposition` class is pretty nifty.
 
-This is (/ will be) a Python module for various prime-related and number-theoretic operations. Certain major functions are memoized to disk for efficiency. For example, output data for `decompose()` (which computes the prime factorization of its argument) is stored in `./memo/decompose.pryme`.
+This is (/ will be) a Python module for various number-theoretic operations and combinatorial structures. Certain major functions are memoized to disk for efficiency. For example, output data for `decompose()` (which computes the prime factorization of its argument) is stored in `./memo/decompose.pryme`.
 
 This module is *not* intended to be suitable or efficient for large primes (> 2^64). The focus of this module is number theory on a more mundane scale. For efficient large primality tests and factorizations, the user is directed towards such modules as `gmpy2` and `SymPy`.
 
