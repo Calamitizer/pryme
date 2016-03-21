@@ -18,23 +18,28 @@ class Decomposition(dict):
         factorization of n. This means e = 0 if p does not divide n.
     if p is not prime:
         Accessing d[p] raises an exception.
-    """    
-    def __init__(self, arg):
+    """
+    def __init__(self, arg={}):
         dict.__init__(self)
         if type(arg) is int:
             self.n = 1
             candidates = primes(int(math.floor(math.sqrt(arg))))
+            print 'cand: ' + `candidates`
             r = arg
             for p in candidates:
                 if r == 1:
-                    return
+                    break
                 while r % p == 0:
                     self[p] += 1
                     r //= p
+            if is_prime(r):
+                self[r] = 1
+            return
         elif isinstance(arg, dict):
+            self.n = 1
             for key in arg:
                 self[key] = arg[key]
-            self.n = product([p ** self[p] for p in self])
+            return
         class DecompConstructionError(Exception):
             def __init__(self, arg):
                 message = 'Invalid Decomposition constructor argument: {c}'
@@ -168,6 +173,38 @@ class Decomposition(dict):
         expansion = '*'.join(factors) if factors else '1'
         return '{n} = '.format(n=int(self)) + expansion
 
+class _Decomposer(object):
+    def __init__(self):
+        self._filename = 'decompose.pryme'
+        self._file = None
+    def __call__(self, n):
+        self._open()
+        try:
+            d = self._decode(self._file[str(n)])
+        except KeyError:
+            d = Decomposition(n)
+            self._file[str(n)] = self._encode(d)
+        self._close()
+        return d
+    def _open(self):
+        if self._file is None:
+            self._file = anydbm.open(self._filename, 'c')
+    def _close(self):
+        if self._file is not None:
+            self._file.close()
+            self._file = None
+    def _encode(self, decomp):
+        return json.dumps(dict(decomp))
+    def _decode(self, decompstr):
+        d = ast.literal_eval(decompstr)
+        return Decomposition({int(p): d[p] for p in d})
+
+decompose = _Decomposer()
+
+class _PrimeTable(object):
+    def __init__(self):
+        self.max = 1
+
 class MemoFile(dict):
     def __init__(self, name):
         dict.__init__(self)
@@ -232,18 +269,53 @@ def product(container):
     return reduce(operator.mul, container, 1)
 
 @natural_input
+def mr_prime(n):
+    if n == 1:
+        return False
+    if n % 2 == 0:
+        return n == 2
+    d = n - 1
+    s = 0
+    while (d % 2 == 0):
+        d //= 2
+        s += 1
+    witnesses = mr_witnesses(n)
+    if not witnesses:
+        m = min(n - 1, int(math.floor((2 * math.log(n)) ** 2)))
+        witnesses = xrange(2, m + 1)
+    for a in witnesses:
+        if all([(a ** d) % n != 1 and (a ** ((2 ** r) * d)) % n != n - 1 for r in xrange(s)]):
+            return False
+    return True
+
+@natural_input
+def mr_witnesses(n):
+    if n < 2047:
+        return [2]
+    if n < 1373653:
+        return [2, 3]
+    if n < 9080191:
+        return [31, 73]
+    if n < 25326001:
+        return [2, 3, 5]
+    if n < 3215031751:
+        return [2, 3, 5, 7]
+    return None
+
+@natural_input
 def primes(n):
     """
     Return a list of primes no greater than n.
     """
-    return [2, 3, 5, 7, 11, 13, 17, 19, 23]
+    return [i for i in xrange(1, n + 1) if mr_prime(i)]
 
 @natural_input
 def is_prime(n):
     """
     Return whether n is prime.
     """
-    return n in primes(n)
+    return mr_prime(n)
+
 def dirichlet_conv(f, g):
     """
     Return the Dirichlet convolution of input functions f and g.

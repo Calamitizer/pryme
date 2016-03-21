@@ -4,8 +4,8 @@ def assert_natural(n, m = 1):
     """
     Assert that n is of type int and is greater than m.
     """
-    message = '{n} is not a natural number (of type int).'.format(n=n)
-    assert (type(n) is int) and (n >= m), message
+    message = '{n} is not a natural number.'.format(n=n)
+    assert (n % 1 == 0) and (n >= m), message
 
 def assert_divides(d, n):
     """
@@ -39,18 +39,6 @@ def natural_input(f, m = 1):
         assert_natural(n, m)
         return f(n)
     return final
-
-def needs_int(f):
-    """
-    Decorator for typing arguments as int from Decomposition.
-    """
-    @functools.wraps(f)
-    def wrapper(arg):
-        if type(arg) is int:
-            assert_natural(arg)
-            return f(arg)
-        return f(decompose(arg))
-    return wrapper
 
 def memoize(f): # works!
     """
