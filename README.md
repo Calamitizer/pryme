@@ -6,7 +6,7 @@
 
 ## Overview
 
-Note: This module is very early in development and not too much super-cool stuff is implemented. Check it out if you're curious, though. The `Decomposition` class is pretty nifty.
+Note: This module is early in development and not too much super-cool stuff is implemented. Check it out if you're curious, though. The `Decomposition` class is pretty nifty.
 
 This is (/ will be) a Python module for various number-theoretic operations and combinatorial structures. Certain major functions are memoized to disk for efficiency. For example, output data for `decompose()` (which computes the prime factorization of its argument) is stored in `./memo/decompose.pryme`.
 
@@ -17,6 +17,12 @@ This module is *not* intended to be suitable or efficient for large primes (> 2^
 `NotImplemented`
 
 ## Changelog
+
+### v0.2 (21 March '16)
+
+* Miller-Rabin primality test implemented.
+* `Decomposition`s are properly memoized.
+* `Decomposition` testing script begun.
 
 ### v0.1 (13 March '16)
 
@@ -36,4 +42,4 @@ You can reach the author (Alex Ruble) most easily via GitHub ([Calamitizer](http
 
 ## License
 
-This software has no associated copyrights whatsoever (*i*.*e*. an [unlicense](http://unlicense.org/)). See `LICENSE.txt` for the full description.
+This software has no associated copyrights whatsoever (*i*.*e*. an [unlicense](http://unlicense.org/)). See `LICENSE.txt` for the full description. Crediting me is appreciated, but not required.

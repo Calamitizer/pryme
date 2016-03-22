@@ -2,7 +2,6 @@ import math
 import numbers
 import fractions
 import operator
-import pickle
 
 from .decorators import *
 
@@ -397,9 +396,18 @@ def power_gen(k):
 def unit(n):
     return int(n == 1)
 
+def indicator_gen(C):
+    """
+    Generate the indicator function for a container C.
+    """
+    @natural_input
+    def i(n):
+        return n in C
+    return i
+
 @needs_decomp
 def totient(decomp):
-    factors = [1 - fractions.Fraction(1, d) for d in decomp]
+    factors = [1 - fractions.Fraction(1, p) for p in decomp]
     return int(int(decomp) * product(factors))
 
 @needs_decomp
@@ -439,6 +447,17 @@ def sigma_gen(k):
         return int(product(factors))
     return sigma_k
 
+def jordan_gen(k):
+    """
+    Return the Jordan totient function for index k.
+    """
+    if k == 1:
+        return totient
+    @needs_decomp
+    def j(decomp):
+        factors = [1 - fractions.Fraction(1, p ** k) for p in decomp]
+        return int((int(decomp) ** k) * product(factors))
+
 @needs_decomp
 def num_abel(decomp):
     """
@@ -476,7 +495,7 @@ def breadth(decomp):
     Accepts an int or a Decomposition.
     Called uppercase-Omega in number theory.
     """
-    return sum([decomp[d] for d in decomp])
+    return sum([decomp[p] for p in decomp])
 
 def main():
     x = decompose(20)

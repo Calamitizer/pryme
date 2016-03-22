@@ -6,7 +6,7 @@ def readme():
 
 setup(
     name='pryme',
-    version='0.1',
+    version='0.2',
     description='A number theory package',
     url='http://github.com/calamitizer/pryme',
     author='J. Alex Ruble',
