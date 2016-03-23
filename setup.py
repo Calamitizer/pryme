@@ -11,7 +11,7 @@ setup(
     url='http://github.com/calamitizer/pryme',
     author='J. Alex Ruble',
     author_email='jaruble@ncsu.edu',
-    license='MIT',
+    license='Unlicense',
     packages=['pryme'],
     zip_safe=False
 )
