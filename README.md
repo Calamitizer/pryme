@@ -1,7 +1,5 @@
 # pryme
 
-## written by J. Alex Ruble (Calamitizer)
-
 ([GitHub repository](https://github.com/Calamitizer/pryme))
 
 ## Overview
